@@ -29,7 +29,7 @@ public class DefaultBookingService implements BookingService {
     private static final Logger logger = Logger.getLogger(
             DefaultBookingService.class.getName());
 
-    public void setCargoRepositoryForTest(CargoRepository cargoRepository) {
+    protected void setCargoRepositoryForTest(CargoRepository cargoRepository) {
         this.cargoRepository = cargoRepository;
     }
 

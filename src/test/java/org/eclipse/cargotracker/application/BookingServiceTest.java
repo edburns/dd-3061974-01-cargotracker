@@ -293,8 +293,7 @@ public class BookingServiceTest {
         cargo.assignToRoute(originalItinerary);
 
         RecordingCargoRepository cargoRepository = new RecordingCargoRepository(cargo);
-        DefaultBookingService service = new DefaultBookingService();
-        service.setCargoRepositoryForTest(cargoRepository);
+        DefaultBookingService service = new TestableDefaultBookingService(cargoRepository);
 
         service.changeDeadline(id, requestedDeadline);
 
@@ -364,6 +363,13 @@ public class BookingServiceTest {
         @Override
         public List<TrackingId> getAllTrackingIds() {
             return Collections.emptyList();
+        }
+    }
+
+    private static final class TestableDefaultBookingService extends DefaultBookingService {
+
+        private TestableDefaultBookingService(CargoRepository cargoRepository) {
+            setCargoRepositoryForTest(cargoRepository);
         }
     }
 }
