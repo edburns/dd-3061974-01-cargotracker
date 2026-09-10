@@ -35,7 +35,7 @@
 				<br />
 				<h:outputText value="#{cargoNotRouted.finalDestinationCode}"
 					style="color: #999999;font-size:.8em;" />
-				<i class="fa fa-edit" style="color: #999999;" />
+				<i class="fa fa-edit" style="color: #999999;" aria-hidden="true" />
 				<p:ajax event="dialogReturn"
 					listener="#{changeDestinationDialog.handleReturn}"
 					update="tableNotRouted" />
