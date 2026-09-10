@@ -293,7 +293,6 @@ public class BookingServiceTest {
                 SampleLocations.HELSINKI, now, DateUtils.addDays(now, 1));
         Itinerary originalItinerary = new Itinerary(Collections.singletonList(leg));
         cargo.assignToRoute(originalItinerary);
-        Delivery deliveryBeforeChange = cargo.getDelivery();
 
         RecordingCargoRepository cargoRepository = new RecordingCargoRepository(cargo);
         DefaultBookingService service = new DefaultBookingService();
@@ -308,15 +307,18 @@ public class BookingServiceTest {
         assertEquals(SampleLocations.HELSINKI, cargo.lastSpecifiedRouteSpecification.getDestination());
         assertTrue(DateUtils.isSameDay(requestedDeadline,
                 cargo.lastSpecifiedRouteSpecification.getArrivalDeadline()));
+        assertEquals(cargo.lastSpecifiedRouteSpecification, cargo.getRouteSpecification());
+        assertTrue(DateUtils.isSameDay(requestedDeadline,
+                cargo.getRouteSpecification().getArrivalDeadline()));
         assertEquals(originalItinerary, cargo.getItinerary());
-        assertNotSame(deliveryBeforeChange, cargo.getDelivery());
+        assertEquals(RoutingStatus.ROUTED, cargo.getDelivery().getRoutingStatus());
         assertTrue(cargoRepository.storeCalled);
         assertSame(cargo, cargoRepository.storedCargo);
     }
 
     private static void setField(Object target, String fieldName, Object value)
             throws Exception {
-        Field field = DefaultBookingService.class.getDeclaredField(fieldName);
+        Field field = target.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
         field.set(target, value);
     }
