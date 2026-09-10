@@ -51,6 +51,19 @@ public class ChangeArrivalDeadlineDateTest {
         bean.load();
     }
 
+    @Test(expected = RuntimeException.class)
+    public void loadRejectsAnImpossibleDeadlineDate() throws Exception {
+        RecordingBookingServiceFacade facade = new RecordingBookingServiceFacade();
+        facade.cargoToReturn = cargoRouteWithDeadlineDate("02/30/2024");
+
+        NonClosingChangeArrivalDeadlineDate bean =
+                new NonClosingChangeArrivalDeadlineDate();
+        setFacade(bean, facade);
+        bean.setTrackingId("ABC123");
+
+        bean.load();
+    }
+
     @Test
     public void changeArrivalDeadlineDelegatesTrackingIdAndSelectedDate()
             throws Exception {
