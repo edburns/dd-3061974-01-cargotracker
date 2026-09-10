@@ -49,7 +49,7 @@
 				action="#{changeArrivalDeadlineDateDialog.showDialog(cargoNotRouted.trackingId)}"
 				style="text-decoration: none;" id="arrivalDeadlineToUpdate">
 				<h:outputText value="#{cargoNotRouted.arrivalDeadlineDate}" />
-				<i class="fa fa-edit" style="color: #999999;" />
+				<i class="fa fa-edit" style="color: #999999;" aria-hidden="true" />
 				<p:ajax event="dialogReturn"
 					listener="#{changeArrivalDeadlineDateDialog.handleReturn}"
 					update="tableNotRouted" />
