@@ -29,6 +29,10 @@ public class DefaultBookingService implements BookingService {
     private static final Logger logger = Logger.getLogger(
             DefaultBookingService.class.getName());
 
+    protected void setCargoRepositoryForTest(CargoRepository cargoRepository) {
+        this.cargoRepository = cargoRepository;
+    }
+
     @Override
     public TrackingId bookNewCargo(UnLocode originUnLocode,
                                    UnLocode destinationUnLocode,
@@ -83,5 +87,20 @@ public class DefaultBookingService implements BookingService {
 
         logger.log(Level.INFO, "Changed destination for cargo {0} to {1}",
                 new Object[]{trackingId, routeSpecification.getDestination()});
+    }
+
+    @Override
+    public void changeDeadline(TrackingId trackingId, Date deadline) {
+        Cargo cargo = cargoRepository.find(trackingId);
+
+        RouteSpecification routeSpecification = new RouteSpecification(
+                cargo.getOrigin(),
+                cargo.getRouteSpecification().getDestination(), deadline);
+        cargo.specifyNewRoute(routeSpecification);
+
+        cargoRepository.store(cargo);
+
+        logger.log(Level.INFO, "Changed deadline for cargo {0} to {1}",
+                new Object[]{trackingId, routeSpecification.getArrivalDeadline()});
     }
 }

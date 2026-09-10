@@ -245,4 +245,131 @@ public class BookingServiceTest {
         assertEquals(RoutingStatus.MISROUTED, cargo.getDelivery()
                 .getRoutingStatus());
     }
+
+    @Test
+    @InSequence(5)
+    public void testChangeDeadline() {
+        Date newDeadline = DateUtils.addMonths(deadline, 1);
+        bookingService.changeDeadline(trackingId, newDeadline);
+
+        Cargo cargo = entityManager
+                .createNamedQuery("Cargo.findByTrackingId", Cargo.class)
+                .setParameter("trackingId", trackingId).getSingleResult();
+
+        assertEquals(SampleLocations.CHICAGO, cargo.getOrigin());
+        assertEquals(SampleLocations.HELSINKI, cargo.getRouteSpecification()
+                .getDestination());
+        assertTrue(DateUtils.isSameDay(newDeadline, cargo.getRouteSpecification()
+                .getArrivalDeadline()));
+        assertEquals(assigned, cargo.getItinerary());
+        assertEquals(TransportStatus.NOT_RECEIVED, cargo.getDelivery()
+                .getTransportStatus());
+        assertEquals(Location.UNKNOWN, cargo.getDelivery()
+                .getLastKnownLocation());
+        assertEquals(Voyage.NONE, cargo.getDelivery().getCurrentVoyage());
+        assertFalse(cargo.getDelivery().isMisdirected());
+        assertEquals(Delivery.ETA_UNKOWN, cargo.getDelivery()
+                .getEstimatedTimeOfArrival());
+        assertEquals(Delivery.NO_ACTIVITY, cargo.getDelivery()
+                .getNextExpectedActivity());
+        assertFalse(cargo.getDelivery().isUnloadedAtDestination());
+        assertEquals(RoutingStatus.MISROUTED, cargo.getDelivery()
+                .getRoutingStatus());
+    }
+
+    @Test
+    public void testChangeDeadlineInvokesAggregateAndStore() throws Exception {
+        TrackingId id = new TrackingId("TEST01");
+        Date originalDeadline = DateUtils.addMonths(new Date(), 2);
+        Date requestedDeadline = DateUtils.addMonths(originalDeadline, 1);
+        RouteSpecification originalSpecification = new RouteSpecification(
+                SampleLocations.CHICAGO, SampleLocations.HELSINKI, originalDeadline);
+        RecordingCargo cargo = new RecordingCargo(id, originalSpecification);
+
+        Date now = new Date();
+        Leg leg = new Leg(Voyage.NONE, SampleLocations.CHICAGO,
+                SampleLocations.HELSINKI, now, DateUtils.addDays(now, 1));
+        Itinerary originalItinerary = new Itinerary(Collections.singletonList(leg));
+        cargo.assignToRoute(originalItinerary);
+
+        RecordingCargoRepository cargoRepository = new RecordingCargoRepository(cargo);
+        DefaultBookingService service = new TestableDefaultBookingService(cargoRepository);
+
+        service.changeDeadline(id, requestedDeadline);
+
+        assertEquals(1, cargo.specifyNewRouteCalls);
+        assertNotNull(cargo.lastSpecifiedRouteSpecification);
+        assertNotSame(originalSpecification, cargo.lastSpecifiedRouteSpecification);
+        assertEquals(SampleLocations.CHICAGO, cargo.lastSpecifiedRouteSpecification.getOrigin());
+        assertEquals(SampleLocations.HELSINKI, cargo.lastSpecifiedRouteSpecification.getDestination());
+        assertTrue(DateUtils.isSameDay(requestedDeadline,
+                cargo.lastSpecifiedRouteSpecification.getArrivalDeadline()));
+        assertEquals(cargo.lastSpecifiedRouteSpecification, cargo.getRouteSpecification());
+        assertEquals(originalItinerary, cargo.getItinerary());
+        assertEquals(RoutingStatus.ROUTED, cargo.getDelivery().getRoutingStatus());
+        assertTrue(cargoRepository.storeCalled);
+        assertSame(cargo, cargoRepository.storedCargo);
+    }
+
+    private static final class RecordingCargo extends Cargo {
+
+        private int specifyNewRouteCalls;
+        private RouteSpecification lastSpecifiedRouteSpecification;
+
+        private RecordingCargo(TrackingId trackingId,
+                               RouteSpecification routeSpecification) {
+            super(trackingId, routeSpecification);
+        }
+
+        @Override
+        public void specifyNewRoute(RouteSpecification routeSpecification) {
+            specifyNewRouteCalls++;
+            lastSpecifiedRouteSpecification = routeSpecification;
+            super.specifyNewRoute(routeSpecification);
+        }
+    }
+
+    private static final class RecordingCargoRepository implements CargoRepository {
+
+        private final Cargo cargo;
+        private boolean storeCalled;
+        private Cargo storedCargo;
+
+        private RecordingCargoRepository(Cargo cargo) {
+            this.cargo = cargo;
+        }
+
+        @Override
+        public Cargo find(TrackingId trackingId) {
+            return cargo;
+        }
+
+        @Override
+        public List<Cargo> findAll() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public void store(Cargo cargo) {
+            storeCalled = true;
+            storedCargo = cargo;
+        }
+
+        @Override
+        public TrackingId nextTrackingId() {
+            return new TrackingId("NEXT01");
+        }
+
+        @Override
+        public List<TrackingId> getAllTrackingIds() {
+            return Collections.emptyList();
+        }
+    }
+
+    private static final class TestableDefaultBookingService extends DefaultBookingService {
+
+        private TestableDefaultBookingService(CargoRepository cargoRepository) {
+            setCargoRepositoryForTest(cargoRepository);
+        }
+    }
 }
