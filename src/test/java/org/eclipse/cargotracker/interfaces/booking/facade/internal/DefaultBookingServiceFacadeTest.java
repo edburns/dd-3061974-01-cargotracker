@@ -18,6 +18,8 @@ import static org.junit.Assert.assertSame;
 
 public class DefaultBookingServiceFacadeTest {
 
+    private static final long DEADLINE_TIME = 123456789L;
+
     @Test
     public void changeDeadlineDelegatesToBookingService() throws Exception {
         DefaultBookingServiceFacade facade = new DefaultBookingServiceFacade();
@@ -26,21 +28,36 @@ public class DefaultBookingServiceFacadeTest {
         setField(facade, "bookingService", bookingService);
         setField(facade, "cargoRepository", new FailingCargoRepository());
 
-        Date arrivalDeadline = new Date(123456789L);
+        Date arrivalDeadline = new Date(DEADLINE_TIME);
 
         facade.changeDeadline("ABC123", arrivalDeadline);
 
         assertEquals(1, bookingService.changeDeadlineCalls);
         assertEquals(new TrackingId("ABC123"), bookingService.trackingId);
         assertSame(arrivalDeadline, bookingService.arrivalDeadline);
-        assertEquals(new Date(123456789L), bookingService.arrivalDeadline);
+        assertEquals(DEADLINE_TIME, bookingService.arrivalDeadline.getTime());
     }
 
     private static void setField(Object target, String fieldName, Object value)
             throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
+        Field field = getField(target.getClass(), fieldName);
         field.setAccessible(true);
         field.set(target, value);
+    }
+
+    private static Field getField(Class<?> type, String fieldName)
+            throws NoSuchFieldException {
+        Class<?> currentType = type;
+
+        while (currentType != null) {
+            try {
+                return currentType.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException e) {
+                currentType = currentType.getSuperclass();
+            }
+        }
+
+        throw new NoSuchFieldException(fieldName);
     }
 
     private static final class RecordingBookingService implements BookingService {
