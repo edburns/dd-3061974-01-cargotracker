@@ -40,7 +40,6 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 
@@ -294,8 +293,7 @@ public class BookingServiceTest {
         cargo.assignToRoute(originalItinerary);
 
         RecordingCargoRepository cargoRepository = new RecordingCargoRepository(cargo);
-        DefaultBookingService service = new DefaultBookingService();
-        setField(service, "cargoRepository", cargoRepository);
+        DefaultBookingService service = new DefaultBookingService(cargoRepository);
 
         service.changeDeadline(id, requestedDeadline);
 
@@ -307,28 +305,10 @@ public class BookingServiceTest {
         assertTrue(DateUtils.isSameDay(requestedDeadline,
                 cargo.lastSpecifiedRouteSpecification.getArrivalDeadline()));
         assertEquals(cargo.lastSpecifiedRouteSpecification, cargo.getRouteSpecification());
-        assertTrue(DateUtils.isSameDay(requestedDeadline,
-                cargo.getRouteSpecification().getArrivalDeadline()));
         assertEquals(originalItinerary, cargo.getItinerary());
         assertEquals(RoutingStatus.ROUTED, cargo.getDelivery().getRoutingStatus());
         assertTrue(cargoRepository.storeCalled);
         assertSame(cargo, cargoRepository.storedCargo);
-    }
-
-    private static void setField(Object target, String fieldName, Object value)
-            throws Exception {
-        Class<?> type = target.getClass();
-        while (type != null) {
-            try {
-                Field field = type.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                field.set(target, value);
-                return;
-            } catch (NoSuchFieldException e) {
-                type = type.getSuperclass();
-            }
-        }
-        throw new NoSuchFieldException(fieldName);
     }
 
     private static final class RecordingCargo extends Cargo {

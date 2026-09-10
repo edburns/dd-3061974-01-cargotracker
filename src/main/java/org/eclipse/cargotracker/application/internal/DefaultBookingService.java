@@ -19,6 +19,13 @@ import java.util.logging.Logger;
 @Stateless
 public class DefaultBookingService implements BookingService {
 
+    public DefaultBookingService() {
+    }
+
+    public DefaultBookingService(CargoRepository cargoRepository) {
+        this.cargoRepository = cargoRepository;
+    }
+
     @Inject
     private CargoRepository cargoRepository;
     @Inject
