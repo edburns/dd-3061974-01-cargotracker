@@ -8,8 +8,6 @@ import org.eclipse.cargotracker.domain.model.cargo.TrackingId;
 import org.eclipse.cargotracker.domain.model.location.UnLocode;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -25,8 +23,8 @@ public class DefaultBookingServiceFacadeTest {
         DefaultBookingServiceFacade facade = new DefaultBookingServiceFacade();
         RecordingBookingService bookingService = new RecordingBookingService();
 
-        setField(facade, "bookingService", bookingService);
-        setField(facade, "cargoRepository", new FailingCargoRepository());
+        facade.setBookingServiceForTest(bookingService);
+        facade.setCargoRepositoryForTest(new FailingCargoRepository());
 
         Date arrivalDeadline = new Date(DEADLINE_TIME);
 
@@ -36,28 +34,6 @@ public class DefaultBookingServiceFacadeTest {
         assertEquals(new TrackingId("ABC123"), bookingService.trackingId);
         assertSame(arrivalDeadline, bookingService.arrivalDeadline);
         assertEquals(DEADLINE_TIME, bookingService.arrivalDeadline.getTime());
-    }
-
-    private static void setField(Object target, String fieldName, Object value)
-            throws Exception {
-        Field field = getField(target.getClass(), fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
-
-    private static Field getField(Class<?> type, String fieldName)
-            throws NoSuchFieldException {
-        Class<?> currentType = type;
-
-        while (currentType != null) {
-            try {
-                return currentType.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                currentType = currentType.getSuperclass();
-            }
-        }
-
-        throw new NoSuchFieldException(fieldName);
     }
 
     private static final class RecordingBookingService implements BookingService {
@@ -74,7 +50,7 @@ public class DefaultBookingServiceFacadeTest {
 
         @Override
         public List<Itinerary> requestPossibleRoutesForCargo(TrackingId trackingId) {
-            return Collections.emptyList();
+            throw new AssertionError("requestPossibleRoutesForCargo should not be called");
         }
 
         @Override
