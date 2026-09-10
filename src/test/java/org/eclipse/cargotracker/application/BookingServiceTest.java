@@ -293,7 +293,8 @@ public class BookingServiceTest {
         cargo.assignToRoute(originalItinerary);
 
         RecordingCargoRepository cargoRepository = new RecordingCargoRepository(cargo);
-        DefaultBookingService service = new DefaultBookingService(cargoRepository);
+        DefaultBookingService service = new DefaultBookingService();
+        service.setCargoRepositoryForTest(cargoRepository);
 
         service.changeDeadline(id, requestedDeadline);
 

@@ -19,13 +19,6 @@ import java.util.logging.Logger;
 @Stateless
 public class DefaultBookingService implements BookingService {
 
-    public DefaultBookingService() {
-    }
-
-    public DefaultBookingService(CargoRepository cargoRepository) {
-        this.cargoRepository = cargoRepository;
-    }
-
     @Inject
     private CargoRepository cargoRepository;
     @Inject
@@ -35,6 +28,10 @@ public class DefaultBookingService implements BookingService {
     // TODO See if the logger can be injected.
     private static final Logger logger = Logger.getLogger(
             DefaultBookingService.class.getName());
+
+    public void setCargoRepositoryForTest(CargoRepository cargoRepository) {
+        this.cargoRepository = cargoRepository;
+    }
 
     @Override
     public TrackingId bookNewCargo(UnLocode originUnLocode,
