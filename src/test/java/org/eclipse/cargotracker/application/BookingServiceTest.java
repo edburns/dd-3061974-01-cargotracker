@@ -279,7 +279,6 @@ public class BookingServiceTest {
     }
 
     @Test
-    @InSequence(6)
     public void testChangeDeadlineInvokesAggregateAndStore() throws Exception {
         TrackingId id = new TrackingId("TEST01");
         Date originalDeadline = DateUtils.addMonths(new Date(), 2);
@@ -318,9 +317,18 @@ public class BookingServiceTest {
 
     private static void setField(Object target, String fieldName, Object value)
             throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
+        Class<?> type = target.getClass();
+        while (type != null) {
+            try {
+                Field field = type.getDeclaredField(fieldName);
+                field.setAccessible(true);
+                field.set(target, value);
+                return;
+            } catch (NoSuchFieldException e) {
+                type = type.getSuperclass();
+            }
+        }
+        throw new NoSuchFieldException(fieldName);
     }
 
     private static final class RecordingCargo extends Cargo {
