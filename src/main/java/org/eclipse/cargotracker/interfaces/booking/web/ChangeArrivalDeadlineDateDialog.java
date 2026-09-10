@@ -34,6 +34,9 @@ public class ChangeArrivalDeadlineDateDialog implements Serializable {
                 options, params);
     }
 
+    /**
+     * Preserves the destination-dialog return listener lifecycle.
+     */
     public void handleReturn(SelectEvent event) {
     }
 
